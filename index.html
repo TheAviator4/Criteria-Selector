@@ -1,0 +1,622 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Response Criteria Selector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        *,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:'Poppins',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal}body{margin:0;line-height:inherit}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;-webkit-text-decoration:inherit;text-decoration:inherit}b,strong{font-weight:bolder}button,input{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}button{text-transform:none}button,[type='button']{-webkit-appearance:button;appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type='search']{-webkit-appearance:textfield;appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font-family:inherit}[hidden]{display:none}*,::before,::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }.fade-in{animation:fadeIn 0.5s ease-in}@keyframes fadeIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}.gradient-btn{background:linear-gradient(to right,#3b82f6,#2dd4bf);transition:transform 0.2s ease,background 0.3s ease}.gradient-btn:hover{background:linear-gradient(to right,#2563eb,#14b8a6);transform:scale(1.05)}.gradient-bg{background:linear-gradient(to bottom right,#e0f2fe,#f8fafc)}.card{background:#fff;border-radius:1rem;box-shadow:0 8px 20px rgba(0,0,0,0.1);border:2px solid transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(to bottom right,#3b82f6,#2dd4bf) border-box}.disclaimer-card{background:#f9fafb;border-radius:.5rem;padding:1rem;margin-bottom:1rem;border:1px solid #e5e7eb}.reminder-card{background:#e0f2fe;border-radius:.5rem;padding:1rem;margin-top:1rem;border:1px solid #bfdbfe}.aspect-card{transition:transform 0.2s ease,box-shadow 0.2s ease}.aspect-card:hover{transform:translateY(-3px);box-shadow:0 4px 10px rgba(0,0,0,0.1)}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-4{margin-bottom:1rem}.ml-2{margin-left:.5rem}.ml-6{margin-left:1.5rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.flex{display:flex}.hidden{display:none}.w-full{width:100%}@media (min-width:640px){.max-w-lg{max-width:32rem}}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem * var(--tw-space-y-reverse))}.space-y-1>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.25rem * var(--tw-space-y-reverse))}.overflow-y-auto{overflow-y:auto}.rounded-lg{border-radius:.5rem}.border{border-width:1px}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235 / var(--tw-border-opacity))}.bg-green-50{--tw-bg-opacity:1;background-color:rgb(240 253 244 / var(--tw-bg-opacity))}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity))}.p-3{padding:.75rem}.p-6{padding:1.5rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.text-base{font-size:1rem;line-height:1.5rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.font-light{font-weight:300}.font-semibold{font-weight:600}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity))}.text-gray-800{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.min-h-screen{min-height:100vh}.max-h-64{max-height:16rem}.cursor-pointer{cursor:pointer}@media (max-width:640px){.max-w-lg{max-width:90%;padding:1rem}.text-3xl{font-size:1.5rem}.text-lg{font-size:1rem}.text-base{font-size:.875rem}}
+    </style>
+</head>
+<body class="gradient-bg flex items-center justify-center min-h-screen">
+    <div class="card p-6 max-w-lg">
+        <h1 class="text-3xl font-semibold text-gray-800 text-center mb-4">Response Criteria Selector</h1>
+        <div class="disclaimer-card text-sm text-gray-600">
+            <strong>Disclaimer:</strong> This tool is designed to assist in brainstorming ideas, enhancing creativity, and overcoming mental blocks. It is not intended for directly copying and pasting the suggested criteria or limiting your creative options to these suggestions alone. Users are encouraged to adapt and expand upon the ideas in a manner that best suits their needs.
+        </div>
+        <div class="disclaimer-card text-sm text-gray-600">
+            <strong>Disclaimer:</strong> The data provided may contain inaccuracies. Users should rely on their best judgment at all times when applying the suggestions, ensuring they align with the specific context and requirements of their situation.
+        </div>
+        <div id="decision-tree" class="fade-in">
+            <div id="question" class="text-lg font-light text-gray-600 mb-4"></div>
+            <div id="answers" class="space-y-3"></div>
+        </div>
+        <div id="step1" class="hidden mb-4">
+            <p class="text-lg font-light text-gray-600 mb-2">Select vocal aspects to exclude:</p>
+            <div id="aspects-list" class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3"></div>
+            <button id="finalize" class="gradient-btn mt-6 text-white px-6 py-3 rounded-lg w-full text-base font-semibold">Finalize</button>
+        </div>
+        <div id="result" class="hidden mt-4 p-3 bg-green-50 rounded-lg text-gray-800"></div>
+        <div id="reminder" class="hidden reminder-card text-sm text-gray-600">
+            <strong>Reminder:</strong> Follow this suggested pattern for each criterion: <em>"The response should" + [Verb] + [Criterion Suggestion] + [Bridge (e.g., This can be achieved by ways such as, but not limited to, )] + [Cached Examples]</em>
+        </div>
+        <div id="path" class="hidden mt-4 p-3 bg-blue-50 rounded-lg text-gray-800"></div>
+        <div class="mt-4 flex justify-between">
+            <button id="back" class="gradient-btn text-white px-6 py-3 rounded-lg font-semibold hidden">Back</button>
+            <button id="restart" class="gradient-btn text-white px-6 py-3 rounded-lg font-semibold hidden">Restart</button>
+        </div>
+    </div>
+
+    <script>
+        // Suggestion data for each conversation type, subtype, and aspect
+        const suggestionData = {
+            "Casual & Social": {
+                "Chit Chat / Small Talk": {
+                    "Tone": { suggestion: "casual, friendly tone", verb: "convey", examples: ["using a relaxed vocal tone", "softening your pitch for friendliness", "maintaining a light vocal sound"] },
+                    "Pitch": { suggestion: "variable, lively pitch", verb: "use", examples: ["varying your pitch for liveliness", "adding slight pitch rises for engagement", "keeping a dynamic vocal range"] },
+                    "Intonation": { suggestion: "rising and falling intonation", verb: "use", examples: ["using rising pitch at sentence ends", "falling pitch for casual statements", "adding a conversational tone shift"] },
+                    "Pace": { suggestion: "medium to fast pace", verb: "deliver", examples: ["speaking at a brisk vocal speed", "maintaining a lively vocal rhythm", "avoiding slow vocal delivery"] },
+                    "Cadence/Rhythm": { suggestion: "conversational, varied rhythm", verb: "adopt", examples: ["using a varied vocal tempo", "keeping a natural conversational flow", "avoiding monotonous vocal patterns"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a balanced vocal level", "adjusting volume to the setting", "maintaining a clear vocal loudness"] },
+                    "Pauses": { suggestion: "moderate pauses", verb: "incorporate", examples: ["pausing briefly between thoughts", "using natural vocal breaks", "allowing short silences for effect"] },
+                    "Emphasis": { suggestion: "natural, informal emphasis", verb: "apply", examples: ["stressing key words with a casual tone", "using a light vocal weight", "highlighting points with a relaxed pitch"] },
+                    "Timbre": { suggestion: "warm, relaxed timbre", verb: "use", examples: ["softening your vocal tone for warmth", "using a smooth vocal texture", "maintaining a comforting vocal sound"] },
+                    "Natural Delivery": { suggestion: "relaxed delivery", verb: "adopt", examples: ["using a casual vocal style", "speaking with a natural flow", "avoiding formal vocal patterns"] }
+                },
+                "Storytelling / Recounting Experiences": {
+                    "Tone": { suggestion: "engaging, reflective tone", verb: "convey", examples: ["using a captivating vocal tone", "adding a reflective pitch shift", "maintaining an immersive vocal sound"] },
+                    "Pitch": { suggestion: "dynamic with variation pitch", verb: "use", examples: ["varying pitch for dramatic effect", "raising pitch on exciting moments", "lowering pitch for reflective parts"] },
+                    "Intonation": { suggestion: "expressive, narrative intonation", verb: "use", examples: ["adding expressive pitch shifts", "using a storytelling tone pattern", "emphasizing key moments vocally"] },
+                    "Pace": { suggestion: "moderate with variation pace", verb: "deliver", examples: ["adjusting vocal speed for drama", "slowing down for reflection", "speeding up for excitement"] },
+                    "Cadence/Rhythm": { suggestion: "flowing, dramatic rhythm", verb: "adopt", examples: ["using a smooth vocal flow", "adding dramatic vocal pauses", "varying tempo for narrative effect"] },
+                    "Volume": { suggestion: "modulated volume", verb: "use", examples: ["varying volume for dramatic effect", "raising volume on key moments", "lowering volume for suspense"] },
+                    "Pauses": { suggestion: "modulated pauses", verb: "incorporate", examples: ["pausing to build suspense", "using longer pauses for reflection", "adding short pauses for emphasis"] },
+                    "Emphasis": { suggestion: "emphasis on key plot points", verb: "apply", examples: ["stressing pivotal moments with vocal weight", "raising pitch on important parts", "using a firm tone for highlights"] },
+                    "Timbre": { suggestion: "rich, animated timbre", verb: "use", examples: ["using a vibrant vocal texture", "adding richness to your voice", "maintaining an animated vocal sound"] },
+                    "Natural Delivery": { suggestion: "engaging delivery", verb: "adopt", examples: ["using a captivating vocal style", "maintaining a narrative flow", "avoiding flat vocal delivery"] }
+                },
+                "Joking / Playful Banter": {
+                    "Tone": { suggestion: "playful, teasing tone", verb: "convey", examples: ["using a light, teasing vocal tone", "adding a mischievous pitch shift", "maintaining a fun vocal sound"] },
+                    "Pitch": { suggestion: "light, variable pitch", verb: "use", examples: ["raising pitch for playfulness", "varying pitch for teasing effect", "keeping a light vocal range"] },
+                    "Intonation": { suggestion: "bouncy, irregular intonation", verb: "use", examples: ["adding bouncy pitch shifts", "using an irregular tone pattern", "emphasizing humor with vocal variation"] },
+                    "Pace": { suggestion: "quick, upbeat pace", verb: "deliver", examples: ["speaking at a fast vocal speed", "using short vocal bursts", "maintaining an energetic rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "rhythmic, punchy rhythm", verb: "adopt", examples: ["using a punchy vocal tempo", "keeping a rhythmic vocal flow", "adding a lively vocal beat"] },
+                    "Volume": { suggestion: "louder or exaggerated volume", verb: "use", examples: ["raising volume for comedic effect", "using exaggerated vocal levels", "maintaining a bold vocal loudness"] },
+                    "Pauses": { suggestion: "moderate pauses", verb: "incorporate", examples: ["pausing briefly to build humor", "using short silences for timing", "adding breaks for comedic effect"] },
+                    "Emphasis": { suggestion: "emphasis on punchlines or irony", verb: "apply", examples: ["stressing key words with a playful tone", "using a sharp vocal weight on punchlines", "highlighting irony with pitch"] },
+                    "Timbre": { suggestion: "bright, mischievous timbre", verb: "use", examples: ["using a lively vocal tone", "adding a mischievous vocal texture", "maintaining a bright vocal sound"] },
+                    "Natural Delivery": { suggestion: "playful delivery", verb: "adopt", examples: ["using a fun vocal style", "maintaining a teasing vocal flow", "avoiding serious vocal patterns"] }
+                },
+                "Emotional Support / Empathy Sharing": {
+                    "Tone": { suggestion: "warm, compassionate tone", verb: "convey", examples: ["softening your vocal tone for warmth", "using a caring pitch", "maintaining a soothing vocal sound"] },
+                    "Pitch": { suggestion: "soft, stable pitch", verb: "use", examples: ["keeping a gentle vocal range", "avoiding sharp pitch changes", "using a steady, soft pitch"] },
+                    "Intonation": { suggestion: "gentle falling pattern intonation", verb: "use", examples: ["using a soft falling vocal tone", "adding a calming pitch shift", "maintaining a gentle vocal pattern"] },
+                    "Pace": { suggestion: "slow to moderate pace", verb: "deliver", examples: ["speaking at a gentle vocal speed", "pausing to show care", "maintaining a comforting rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "soothing, steady rhythm", verb: "adopt", examples: ["using a smooth vocal tempo", "keeping a steady vocal flow", "avoiding abrupt vocal changes"] },
+                    "Volume": { suggestion: "low to moderate volume", verb: "use", examples: ["speaking at a soft vocal level", "maintaining a gentle loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "moderate pauses", verb: "incorporate", examples: ["pausing to show empathy", "using silences to connect", "adding breaks for emotional effect"] },
+                    "Emphasis": { suggestion: "emphasis on validating words", verb: "apply", examples: ["stressing comforting words softly", "using a gentle vocal weight", "highlighting support with tone"] },
+                    "Timbre": { suggestion: "soft, tender timbre", verb: "use", examples: ["using a tender vocal tone", "maintaining a soft vocal texture", "creating a comforting vocal sound"] },
+                    "Natural Delivery": { suggestion: "compassionate delivery", verb: "adopt", examples: ["using a caring vocal style", "maintaining a supportive flow", "avoiding harsh vocal patterns"] }
+                },
+                "Greeting / Parting Exchanges": {
+                    "Tone": { suggestion: "upbeat or polite tone", verb: "convey", examples: ["using a cheerful vocal tone", "adding a polite pitch shift", "maintaining a friendly vocal sound"] },
+                    "Pitch": { suggestion: "slightly raised pitch", verb: "use", examples: ["raising pitch for cheerfulness", "using a bright vocal range", "avoiding low-pitched tones"] },
+                    "Intonation": { suggestion: "bright rising/falling intonation", verb: "use", examples: ["using a rising pitch for greetings", "falling pitch for farewells", "adding a bright tone shift"] },
+                    "Pace": { suggestion: "fast or medium pace", verb: "deliver", examples: ["speaking at a brisk vocal speed", "using a lively vocal rhythm", "maintaining a quick vocal flow"] },
+                    "Cadence/Rhythm": { suggestion: "short, structured rhythm", verb: "adopt", examples: ["using a concise vocal tempo", "keeping a structured vocal flow", "avoiding drawn-out vocal patterns"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a balanced loudness", "avoiding overly soft volume"] },
+                    "Pauses": { suggestion: "moderate pauses", verb: "incorporate", examples: ["pausing briefly between greetings", "using short silences for effect", "adding breaks for clarity"] },
+                    "Emphasis": { suggestion: "emphasis on names or farewell terms", verb: "apply", examples: ["stressing key words with a polite tone", "using a light vocal weight", "highlighting names with pitch"] },
+                    "Timbre": { suggestion: "friendly, clear timbre", verb: "use", examples: ["using a clear vocal tone", "maintaining a friendly vocal texture", "creating a welcoming vocal sound"] },
+                    "Natural Delivery": { suggestion: "friendly delivery", verb: "adopt", examples: ["using a warm vocal style", "maintaining a polite flow", "avoiding formal vocal patterns"] }
+                }
+            },
+            "Instructional & Informational": {
+                "Giving Instructions / Directions": {
+                    "Tone": { suggestion: "clear, directive tone", verb: "present", examples: ["using a precise vocal tone", "speaking with a firm pitch", "maintaining a commanding vocal sound"] },
+                    "Pitch": { suggestion: "even, steady pitch", verb: "use", examples: ["keeping a consistent vocal range", "avoiding pitch fluctuations", "using a steady vocal height"] },
+                    "Intonation": { suggestion: "neutral intonation", verb: "use", examples: ["maintaining a flat vocal tone", "avoiding expressive shifts", "using a straightforward vocal pattern"] },
+                    "Pace": { suggestion: "moderate pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to ensure clarity", "maintaining a balanced vocal rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "stepwise, deliberate rhythm", verb: "adopt", examples: ["using a step-by-step vocal tempo", "keeping a deliberate vocal flow", "avoiding rushed vocal patterns"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a balanced loudness", "ensuring audibility"] },
+                    "Pauses": { suggestion: "pauses between steps", verb: "incorporate", examples: ["pausing to separate instructions", "using silences for clarity", "adding breaks between steps"] },
+                    "Emphasis": { suggestion: "emphasis on action verbs or critical info", verb: "apply", examples: ["stressing key actions with a firm tone", "using a clear vocal weight", "highlighting steps with vocal clarity"] },
+                    "Timbre": { suggestion: "precise, neutral timbre", verb: "use", examples: ["using a crisp vocal tone", "maintaining a neutral vocal texture", "ensuring a focused vocal sound"] },
+                    "Natural Delivery": { suggestion: "directive delivery", verb: "adopt", examples: ["using a commanding vocal style", "maintaining a clear flow", "avoiding casual vocal patterns"] }
+                },
+                "Explaining a Concept / Teaching": {
+                    "Tone": { suggestion: "encouraging, clear tone", verb: "present", examples: ["using a supportive vocal tone", "speaking with a clear pitch", "maintaining an engaging vocal sound"] },
+                    "Pitch": { suggestion: "modulated for clarity pitch", verb: "use", examples: ["varying pitch to highlight points", "raising pitch for examples", "lowering pitch for explanations"] },
+                    "Intonation": { suggestion: "rising and falling examples intonation", verb: "use", examples: ["using rising pitch for examples", "falling pitch for conclusions", "adding a teaching tone shift"] },
+                    "Pace": { suggestion: "moderate, varies with complexity pace", verb: "deliver", examples: ["adjusting vocal speed for clarity", "slowing down for complex parts", "speeding up for familiar concepts"] },
+                    "Cadence/Rhythm": { suggestion: "smooth, structured rhythm", verb: "adopt", examples: ["using a smooth vocal tempo", "keeping a structured vocal flow", "avoiding erratic vocal pacing"] },
+                    "Volume": { suggestion: "moderate to loud volume", verb: "use", examples: ["speaking at a clear vocal level", "raising volume for emphasis", "maintaining audibility"] },
+                    "Pauses": { suggestion: "pauses to check understanding", verb: "incorporate", examples: ["pausing to allow comprehension", "using silences to gauge understanding", "adding breaks for questions"] },
+                    "Emphasis": { suggestion: "emphasis on key terms", verb: "apply", examples: ["stressing concepts with a clear tone", "using a firm vocal weight", "highlighting terms with pitch"] },
+                    "Timbre": { suggestion: "supportive, resonant timbre", verb: "use", examples: ["using a resonant vocal tone", "maintaining a supportive texture", "ensuring an engaging vocal sound"] },
+                    "Natural Delivery": { suggestion: "encouraging delivery", verb: "adopt", examples: ["using a supportive vocal style", "maintaining a teaching flow", "avoiding overly formal patterns"] }
+                },
+                "Troubleshooting / Helping Solve a Problem": {
+                    "Tone": { suggestion: "reassuring, neutral tone", verb: "present", examples: ["using a calming vocal tone", "speaking with a neutral pitch", "maintaining a steady vocal sound"] },
+                    "Pitch": { suggestion: "moderate, stable pitch", verb: "use", examples: ["keeping a steady vocal range", "avoiding high-pitched tones", "using a consistent pitch level"] },
+                    "Intonation": { suggestion: "steady to mild rising for clarity intonation", verb: "use", examples: ["using a steady vocal tone", "adding mild rises for clarity", "maintaining a reassuring pattern"] },
+                    "Pace": { suggestion: "slow to moderate pace", verb: "deliver", examples: ["speaking at a gentle vocal speed", "pausing to allow processing", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "steady, step-by-step rhythm", verb: "adopt", examples: ["using a step-by-step vocal tempo", "keeping a steady vocal flow", "avoiding rushed vocal patterns"] },
+                    "Volume": { suggestion: "moderate, slightly lower volume", verb: "use", examples: ["speaking at a soft vocal level", "maintaining a reassuring loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "pauses for processing and emphasis", verb: "incorporate", examples: ["pausing to allow thought", "using silences for emphasis", "adding breaks for clarity"] },
+                    "Emphasis": { suggestion: "emphasis on technical or key terms", verb: "apply", examples: ["stressing key terms with a clear tone", "using a gentle vocal weight", "highlighting solutions with pitch"] },
+                    "Timbre": { suggestion: "clear, supportive timbre", verb: "use", examples: ["using a crisp vocal tone", "maintaining a supportive texture", "ensuring a reassuring vocal sound"] },
+                    "Natural Delivery": { suggestion: "supportive delivery", verb: "adopt", examples: ["using a helpful vocal style", "maintaining a problem-solving flow", "avoiding harsh vocal patterns"] }
+                },
+                "Answering Questions / Clarifying Info": {
+                    "Tone": { suggestion: "helpful, precise tone", verb: "present", examples: ["using a clear vocal tone", "speaking with a precise pitch", "maintaining a helpful vocal sound"] },
+                    "Pitch": { suggestion: "steady, slightly rising pitch", verb: "use", examples: ["keeping a consistent vocal range", "adding a slight rise for clarity", "using a steady pitch level"] },
+                    "Intonation": { suggestion: "rising slightly at end intonation", verb: "use", examples: ["using a slight rise at sentence ends", "maintaining a clear tone pattern", "adding a helpful vocal shift"] },
+                    "Pace": { suggestion: "moderate pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to ensure clarity", "maintaining a balanced rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "controlled, paced rhythm", verb: "adopt", examples: ["using a controlled vocal tempo", "keeping a paced vocal flow", "avoiding rushed vocal patterns"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a balanced loudness", "ensuring audibility"] },
+                    "Pauses": { suggestion: "pauses to mark clarity", verb: "incorporate", examples: ["pausing to separate answers", "using silences for emphasis", "adding breaks for clarity"] },
+                    "Emphasis": { suggestion: "emphasis on correct or emphasized info", verb: "apply", examples: ["stressing key points with a clear tone", "using a precise vocal weight", "highlighting answers with pitch"] },
+                    "Timbre": { suggestion: "neutral, confident timbre", verb: "use", examples: ["using a clear vocal tone", "maintaining a confident texture", "ensuring a precise vocal sound"] },
+                    "Natural Delivery": { suggestion: "helpful delivery", verb: "adopt", examples: ["using a clear vocal style", "maintaining a clarifying flow", "avoiding casual vocal patterns"] }
+                },
+                "Formal Inquiry / Request for Information": {
+                    "Tone": { suggestion: "professional, respectful tone", verb: "present", examples: ["using a formal vocal tone", "speaking with a respectful pitch", "maintaining a polite vocal sound"] },
+                    "Pitch": { suggestion: "moderate, slightly lowered pitch", verb: "use", examples: ["keeping a steady vocal range", "lowering pitch for formality", "using a consistent pitch level"] },
+                    "Intonation": { suggestion: "controlled, slightly falling intonation", verb: "use", examples: ["using a slight fall for formality", "maintaining a controlled tone", "adding a polite vocal shift"] },
+                    "Pace": { suggestion: "moderate pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to show respect", "maintaining a balanced rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "formal, steady rhythm", verb: "adopt", examples: ["using a steady vocal tempo", "keeping a formal vocal flow", "avoiding casual vocal patterns"] },
+                    "Volume": { suggestion: "moderate to low volume", verb: "use", examples: ["speaking at a soft vocal level", "maintaining a polite loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "pauses between formal sections", verb: "incorporate", examples: ["pausing to separate requests", "using silences for formality", "adding breaks for clarity"] },
+                    "Emphasis": { suggestion: "emphasis on formal phrases and data", verb: "apply", examples: ["stressing key phrases with a polite tone", "using a gentle vocal weight", "highlighting requests with pitch"] },
+                    "Timbre": { suggestion: "neutral, clear timbre", verb: "use", examples: ["using a clear vocal tone", "maintaining a neutral texture", "ensuring a professional vocal sound"] },
+                    "Natural Delivery": { suggestion: "formal delivery", verb: "adopt", examples: ["using a polite vocal style", "maintaining a formal flow", "avoiding casual vocal patterns"] }
+                }
+            },
+            "Professional & Strategic": {
+                "Presentation / Speech Delivery": {
+                    "Tone": { suggestion: "confident, engaging tone", verb: "present", examples: ["using a bold vocal tone", "speaking with a captivating pitch", "maintaining an engaging vocal sound"] },
+                    "Pitch": { suggestion: "dynamic for emphasis pitch", verb: "use", examples: ["varying pitch to highlight points", "raising pitch for key messages", "lowering pitch for serious parts"] },
+                    "Intonation": { suggestion: "purposeful, rising intonation", verb: "use", examples: ["using rising pitch for emphasis", "maintaining a purposeful tone", "adding an engaging vocal shift"] },
+                    "Pace": { suggestion: "varies for effect pace", verb: "deliver", examples: ["adjusting vocal speed for drama", "slowing down for emphasis", "speeding up for excitement"] },
+                    "Cadence/Rhythm": { suggestion: "structured, rhythmic rhythm", verb: "adopt", examples: ["using a structured vocal tempo", "keeping a rhythmic vocal flow", "adding a purposeful beat"] },
+                    "Volume": { suggestion: "modulated for emphasis volume", verb: "use", examples: ["varying volume for dramatic effect", "raising volume on key points", "lowering volume for suspense"] },
+                    "Pauses": { suggestion: "intentional for pacing pauses", verb: "incorporate", examples: ["pausing to build suspense", "using silences for emphasis", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "strong emphasis on message points", verb: "apply", examples: ["stressing key messages with a firm tone", "using a bold vocal weight", "highlighting points with pitch"] },
+                    "Timbre": { suggestion: "resonant, polished timbre", verb: "use", examples: ["using a resonant vocal tone", "maintaining a polished texture", "ensuring a professional vocal sound"] },
+                    "Natural Delivery": { suggestion: "engaging delivery", verb: "adopt", examples: ["using a captivating vocal style", "maintaining a presentation flow", "avoiding flat vocal patterns"] }
+                },
+                "Interview (Responding)": {
+                    "Tone": { suggestion: "composed, thoughtful tone", verb: "present", examples: ["using a calm vocal tone", "speaking with a thoughtful pitch", "maintaining a steady vocal sound"] },
+                    "Pitch": { suggestion: "moderate to low pitch", verb: "use", examples: ["keeping a steady vocal range", "lowering pitch for composure", "using a consistent pitch level"] },
+                    "Intonation": { suggestion: "falling intonation on conclusions", verb: "use", examples: ["using a falling pitch for conclusions", "maintaining a composed tone", "adding a thoughtful vocal shift"] },
+                    "Pace": { suggestion: "measured, deliberate pace", verb: "deliver", examples: ["speaking at a careful vocal speed", "pausing to think", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "steady, formal rhythm", verb: "adopt", examples: ["using a steady vocal tempo", "keeping a formal vocal flow", "avoiding casual vocal patterns"] },
+                    "Volume": { suggestion: "controlled volume", verb: "use", examples: ["speaking at a balanced vocal level", "maintaining a steady loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "pauses before and after key answers", verb: "incorporate", examples: ["pausing to gather thoughts", "using silences for emphasis", "adding breaks for clarity"] },
+                    "Emphasis": { suggestion: "emphasis on strengths and achievements", verb: "apply", examples: ["stressing key points with a confident tone", "using a firm vocal weight", "highlighting achievements with pitch"] },
+                    "Timbre": { suggestion: "clear, self-assured timbre", verb: "use", examples: ["using a clear vocal tone", "maintaining a confident texture", "ensuring a composed vocal sound"] },
+                    "Natural Delivery": { suggestion: "thoughtful delivery", verb: "adopt", examples: ["using a composed vocal style", "maintaining a reflective flow", "avoiding rushed vocal patterns"] }
+                },
+                "Interview (Conducting)": {
+                    "Tone": { suggestion: "neutral, professional tone", verb: "present", examples: ["using a formal vocal tone", "speaking with a neutral pitch", "maintaining a professional vocal sound"] },
+                    "Pitch": { suggestion: "even and stable pitch", verb: "use", examples: ["keeping a consistent vocal range", "avoiding pitch fluctuations", "using a steady pitch level"] },
+                    "Intonation": { suggestion: "gently rising to encourage responses intonation", verb: "use", examples: ["using a slight rise to invite answers", "maintaining a neutral tone", "adding a gentle vocal shift"] },
+                    "Pace": { suggestion: "moderate pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to allow responses", "maintaining a balanced rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "paced with room for listening rhythm", verb: "adopt", examples: ["using a paced vocal tempo", "keeping a steady vocal flow", "allowing vocal space for replies"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a balanced loudness", "ensuring audibility"] },
+                    "Pauses": { suggestion: "pauses for active listening", verb: "incorporate", examples: ["pausing to listen attentively", "using silences to encourage replies", "adding breaks for responses"] },
+                    "Emphasis": { suggestion: "emphasis on question stems or prompts", verb: "apply", examples: ["stressing key questions with a clear tone", "using a gentle vocal weight", "highlighting prompts with pitch"] },
+                    "Timbre": { suggestion: "clean, concise timbre", verb: "use", examples: ["using a clear vocal tone", "maintaining a concise texture", "ensuring a professional vocal sound"] },
+                    "Natural Delivery": { suggestion: "professional delivery", verb: "adopt", examples: ["using a formal vocal style", "maintaining a listening flow", "avoiding casual vocal patterns"] }
+                },
+                "Persuasion / Pitching an Idea": {
+                    "Tone": { suggestion: "energetic, confident tone", verb: "present", examples: ["using a bold vocal tone", "speaking with a confident pitch", "maintaining an engaging vocal sound"] },
+                    "Pitch": { suggestion: "variable with rise on key points pitch", verb: "use", examples: ["raising pitch for key points", "varying pitch for persuasion", "using a dynamic vocal range"] },
+                    "Intonation": { suggestion: "rhythmic and punchy intonation", verb: "use", examples: ["using rhythmic pitch shifts", "adding a punchy tone pattern", "emphasizing benefits vocally"] },
+                    "Pace": { suggestion: "fast to moderate pace", verb: "deliver", examples: ["speaking at a brisk vocal speed", "adjusting pace for impact", "maintaining an energetic rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "rhythmic and punchy rhythm", verb: "adopt", examples: ["using a rhythmic vocal tempo", "keeping a punchy vocal flow", "adding a persuasive beat"] },
+                    "Volume": { suggestion: "louder on key ideas volume", verb: "use", examples: ["raising volume for emphasis", "maintaining a bold vocal level", "using louder tones on key points"] },
+                    "Pauses": { suggestion: "pauses to control flow", verb: "incorporate", examples: ["pausing to build suspense", "using silences for emphasis", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "emphasis on benefits or differentiators", verb: "apply", examples: ["stressing benefits with a firm tone", "using a bold vocal weight", "highlighting points with pitch"] },
+                    "Timbre": { suggestion: "expressive, polished timbre", verb: "use", examples: ["using an expressive vocal tone", "maintaining a polished texture", "ensuring a persuasive vocal sound"] },
+                    "Natural Delivery": { suggestion: "confident delivery", verb: "adopt", examples: ["using a bold vocal style", "maintaining a persuasive flow", "avoiding hesitant vocal patterns"] }
+                },
+                "Negotiation / Compromise Building": {
+                    "Tone": { suggestion: "balanced, firm but open tone", verb: "present", examples: ["using a steady vocal tone", "speaking with a firm pitch", "maintaining an open vocal sound"] },
+                    "Pitch": { suggestion: "lowered for authority pitch", verb: "use", examples: ["lowering pitch for authority", "keeping a steady vocal range", "avoiding high-pitched tones"] },
+                    "Intonation": { suggestion: "falling on boundaries, rising on offers intonation", verb: "use", examples: ["using a falling pitch for boundaries", "rising pitch for offers", "adding a balanced tone shift"] },
+                    "Pace": { suggestion: "moderate and steady pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to show openness", "maintaining a balanced rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "structured, with controlled pauses rhythm", verb: "adopt", examples: ["using a structured vocal tempo", "keeping a steady vocal flow", "adding controlled vocal pauses"] },
+                    "Volume": { suggestion: "controlled volume", verb: "use", examples: ["speaking at a balanced vocal level", "maintaining a steady loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "pauses to emphasize terms", verb: "incorporate", examples: ["pausing to highlight terms", "using silences for emphasis", "adding breaks for clarity"] },
+                    "Emphasis": { suggestion: "emphasis on positions or trade-offs", verb: "apply", examples: ["stressing key points with a firm tone", "using a clear vocal weight", "highlighting trade-offs with pitch"] },
+                    "Timbre": { suggestion: "grounded, deliberate timbre", verb: "use", examples: ["using a deep vocal tone", "maintaining a deliberate texture", "ensuring a balanced vocal sound"] },
+                    "Natural Delivery": { suggestion: "balanced delivery", verb: "adopt", examples: ["using a steady vocal style", "maintaining a negotiating flow", "avoiding aggressive vocal patterns"] }
+                }
+            },
+            "Emotional & Relational": {
+                "Conflict Resolution / De-escalation": {
+                    "Tone": { suggestion: "calm, empathetic tone", verb: "convey", examples: ["using a soothing vocal tone", "speaking with a gentle pitch", "maintaining a calming vocal sound"] },
+                    "Pitch": { suggestion: "lowered for control pitch", verb: "use", examples: ["lowering pitch for calmness", "keeping a steady vocal range", "avoiding high-pitched tones"] },
+                    "Intonation": { suggestion: "measured, falling to de-escalate intonation", verb: "use", examples: ["using a falling pitch to calm", "maintaining a measured tone", "adding a soothing vocal shift"] },
+                    "Pace": { suggestion: "deliberate, measured pace", verb: "deliver", examples: ["speaking at a slow vocal speed", "pausing to de-escalate", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "even, calming rhythm", verb: "adopt", examples: ["using a steady vocal tempo", "keeping a calming vocal flow", "avoiding abrupt vocal changes"] },
+                    "Volume": { suggestion: "controlled, slightly lower volume", verb: "use", examples: ["speaking at a soft vocal level", "maintaining a gentle loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "frequent for de-escalation pauses", verb: "incorporate", examples: ["pausing frequently to calm", "using silences to reduce tension", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "softened but firm emphasis", verb: "apply", examples: ["stressing key points with a gentle tone", "using a soft vocal weight", "highlighting solutions with pitch"] },
+                    "Timbre": { suggestion: "grounded, soft timbre", verb: "use", examples: ["using a soft vocal tone", "maintaining a grounded texture", "ensuring a calming vocal sound"] },
+                    "Natural Delivery": { suggestion: "calming delivery", verb: "adopt", examples: ["using a soothing vocal style", "maintaining a de-escalating flow", "avoiding harsh vocal patterns"] }
+                },
+                "Apology / Owning a Mistake": {
+                    "Tone": { suggestion: "sincere, humble tone", verb: "convey", examples: ["using a genuine vocal tone", "speaking with a humble pitch", "maintaining a remorseful vocal sound"] },
+                    "Pitch": { suggestion: "soft, even pitch", verb: "use", examples: ["keeping a gentle vocal range", "avoiding sharp pitch changes", "using a steady, soft pitch"] },
+                    "Intonation": { suggestion: "falling, reflective intonation", verb: "use", examples: ["using a falling pitch for sincerity", "maintaining a reflective tone", "adding a humble vocal shift"] },
+                    "Pace": { suggestion: "slow to moderate pace", verb: "deliver", examples: ["speaking at a gentle vocal speed", "pausing to show sincerity", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "steady, unhurried rhythm", verb: "adopt", examples: ["using a steady vocal tempo", "keeping an unhurried vocal flow", "avoiding rushed vocal patterns"] },
+                    "Volume": { suggestion: "low to moderate volume", verb: "use", examples: ["speaking at a soft vocal level", "maintaining a gentle loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "pauses to show sincerity", verb: "incorporate", examples: ["pausing to express regret", "using silences for reflection", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "emphasis on key regretful words", verb: "apply", examples: ["stressing regret with a gentle tone", "using a soft vocal weight", "highlighting sincerity with pitch"] },
+                    "Timbre": { suggestion: "gentle, earnest timbre", verb: "use", examples: ["using a tender vocal tone", "maintaining an earnest texture", "ensuring a sincere vocal sound"] },
+                    "Natural Delivery": { suggestion: "sincere delivery", verb: "adopt", examples: ["using a genuine vocal style", "maintaining a remorseful flow", "avoiding casual vocal patterns"] }
+                },
+                "Giving Feedback / Evaluation": {
+                    "Tone": { suggestion: "supportive, constructive tone", verb: "convey", examples: ["using a helpful vocal tone", "speaking with a constructive pitch", "maintaining a supportive vocal sound"] },
+                    "Pitch": { suggestion: "moderate, calm pitch", verb: "use", examples: ["keeping a steady vocal range", "avoiding high-pitched tones", "using a consistent pitch level"] },
+                    "Intonation": { suggestion: "gentle rising with positive points intonation", verb: "use", examples: ["using a gentle rise for positives", "maintaining a calm tone", "adding a supportive vocal shift"] },
+                    "Pace": { suggestion: "moderate and intentional pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to separate points", "maintaining a balanced rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "paced for clarity rhythm", verb: "adopt", examples: ["using a paced vocal tempo", "keeping a clear vocal flow", "avoiding rushed vocal patterns"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a balanced loudness", "ensuring audibility"] },
+                    "Pauses": { suggestion: "pauses to separate comments", verb: "incorporate", examples: ["pausing to separate feedback", "using silences for clarity", "adding breaks for emphasis"] },
+                    "Emphasis": { suggestion: "emphasis on actionable points", verb: "apply", examples: ["stressing key points with a clear tone", "using a gentle vocal weight", "highlighting actions with pitch"] },
+                    "Timbre": { suggestion: "professional, composed timbre", verb: "use", examples: ["using a clear vocal tone", "maintaining a composed texture", "ensuring a supportive vocal sound"] },
+                    "Natural Delivery": { suggestion: "constructive delivery", verb: "adopt", examples: ["using a helpful vocal style", "maintaining a feedback flow", "avoiding harsh vocal patterns"] }
+                },
+                "Asking for Help / Expressing Need": {
+                    "Tone": { suggestion: "vulnerable, sincere tone", verb: "convey", examples: ["using a soft vocal tone", "speaking with a sincere pitch", "maintaining a genuine vocal sound"] },
+                    "Pitch": { suggestion: "slightly elevated or soft pitch", verb: "use", examples: ["raising pitch slightly for vulnerability", "using a soft vocal range", "avoiding harsh tones"] },
+                    "Intonation": { suggestion: "rising with uncertain tone intonation", verb: "use", examples: ["using a rising pitch for uncertainty", "maintaining a gentle tone", "adding a hesitant vocal shift"] },
+                    "Pace": { suggestion: "slow to moderate pace", verb: "deliver", examples: ["speaking at a gentle vocal speed", "pausing to show need", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "tentative, dependent on comfort rhythm", verb: "adopt", examples: ["using a tentative vocal tempo", "keeping a hesitant vocal flow", "adjusting rhythm for comfort"] },
+                    "Volume": { suggestion: "lower to moderate volume", verb: "use", examples: ["speaking at a soft vocal level", "maintaining a gentle loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "pauses to show hesitation", verb: "incorporate", examples: ["pausing to express uncertainty", "using silences for vulnerability", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "emphasis on request words", verb: "apply", examples: ["stressing key requests with a soft tone", "using a gentle vocal weight", "highlighting needs with pitch"] },
+                    "Timbre": { suggestion: "soft, open timbre", verb: "use", examples: ["using a tender vocal tone", "maintaining an open texture", "ensuring a sincere vocal sound"] },
+                    "Natural Delivery": { suggestion: "sincere delivery", verb: "adopt", examples: ["using a genuine vocal style", "maintaining a vulnerable flow", "avoiding harsh vocal patterns"] }
+                },
+                "Expressing Gratitude / Appreciation": {
+                    "Tone": { suggestion: "warm, uplifting tone", verb: "convey", examples: ["using a heartfelt vocal tone", "speaking with an uplifting pitch", "maintaining a grateful vocal sound"] },
+                    "Pitch": { suggestion: "light, possibly rising pitch", verb: "use", examples: ["raising pitch for gratitude", "using a light vocal range", "avoiding low-pitched tones"] },
+                    "Intonation": { suggestion: "grateful, flowing intonation", verb: "use", examples: ["using a flowing pitch for warmth", "maintaining a grateful tone", "adding an appreciative vocal shift"] },
+                    "Pace": { suggestion: "medium to slow pace", verb: "deliver", examples: ["speaking at a gentle vocal speed", "pausing to show appreciation", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "gracious, intentional rhythm", verb: "adopt", examples: ["using a gracious vocal tempo", "keeping an intentional vocal flow", "avoiding rushed vocal patterns"] },
+                    "Volume": { suggestion: "moderate to bright volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a bright loudness", "ensuring audibility"] },
+                    "Pauses": { suggestion: "pauses for effect", verb: "incorporate", examples: ["pausing to emphasize gratitude", "using silences for appreciation", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "emphasis on names and thank-yous", verb: "apply", examples: ["stressing thanks with a warm tone", "using a gentle vocal weight", "highlighting names with pitch"] },
+                    "Timbre": { suggestion: "kind, expressive timbre", verb: "use", examples: ["using an expressive vocal tone", "maintaining a kind texture", "ensuring a warm vocal sound"] },
+                    "Natural Delivery": { suggestion: "grateful delivery", verb: "adopt", examples: ["using a heartfelt vocal style", "maintaining an appreciative flow", "avoiding casual vocal patterns"] }
+                }
+            },
+            "Decision-Making & Coordination": {
+                "Planning / Coordinating Tasks": {
+                    "Tone": { suggestion: "focused, collaborative tone", verb: "present", examples: ["using a clear vocal tone", "speaking with a collaborative pitch", "maintaining a focused vocal sound"] },
+                    "Pitch": { suggestion: "steady, moderate pitch", verb: "use", examples: ["keeping a consistent vocal range", "avoiding sharp pitch changes", "using a steady pitch level"] },
+                    "Intonation": { suggestion: "falling on confirmations, rising on tasks intonation", verb: "use", examples: ["using a falling pitch for confirmations", "rising pitch for tasks", "adding a collaborative tone shift"] },
+                    "Pace": { suggestion: "moderate pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to assign tasks", "maintaining a balanced rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "structured, task-oriented rhythm", verb: "adopt", examples: ["using a structured vocal tempo", "keeping a task-oriented vocal flow", "avoiding casual vocal patterns"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a balanced loudness", "ensuring audibility"] },
+                    "Pauses": { suggestion: "pauses to mark agenda points", verb: "incorporate", examples: ["pausing to separate tasks", "using silences for clarity", "adding breaks for emphasis"] },
+                    "Emphasis": { suggestion: "emphasis on deadlines or responsibilities", verb: "apply", examples: ["stressing key deadlines with a clear tone", "using a firm vocal weight", "highlighting tasks with pitch"] },
+                    "Timbre": { suggestion: "neutral, efficient timbre", verb: "use", examples: ["using a clear vocal tone", "maintaining an efficient texture", "ensuring a focused vocal sound"] },
+                    "Natural Delivery": { suggestion: "collaborative delivery", verb: "adopt", examples: ["using a team-oriented vocal style", "maintaining a planning flow", "avoiding casual vocal patterns"] }
+                },
+                "Making a Request / Asking Permission": {
+                    "Tone": { suggestion: "polite, respectful tone", verb: "present", examples: ["using a courteous vocal tone", "speaking with a respectful pitch", "maintaining a polite vocal sound"] },
+                    "Pitch": { suggestion: "slightly raised pitch", verb: "use", examples: ["raising pitch slightly for politeness", "using a gentle vocal range", "avoiding low-pitched tones"] },
+                    "Intonation": { suggestion: "rising for deference intonation", verb: "use", examples: ["using a rising pitch for respect", "maintaining a deferential tone", "adding a polite vocal shift"] },
+                    "Pace": { suggestion: "slow to moderate pace", verb: "deliver", examples: ["speaking at a careful vocal speed", "pausing to show deference", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "carefully phrased rhythm", verb: "adopt", examples: ["using a careful vocal tempo", "keeping a phrased vocal flow", "avoiding rushed vocal patterns"] },
+                    "Volume": { suggestion: "moderate to low volume", verb: "use", examples: ["speaking at a soft vocal level", "maintaining a polite loudness", "avoiding high volume"] },
+                    "Pauses": { suggestion: "pauses to show hesitance", verb: "incorporate", examples: ["pausing to express deference", "using silences for politeness", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "emphasis on the request phrase", verb: "apply", examples: ["stressing requests with a polite tone", "using a gentle vocal weight", "highlighting phrases with pitch"] },
+                    "Timbre": { suggestion: "gentle, courteous timbre", verb: "use", examples: ["using a soft vocal tone", "maintaining a courteous texture", "ensuring a polite vocal sound"] },
+                    "Natural Delivery": { suggestion: "respectful delivery", verb: "adopt", examples: ["using a polite vocal style", "maintaining a deferential flow", "avoiding casual vocal patterns"] }
+                },
+                "Making an Offer / Extending Help": {
+                    "Tone": { suggestion: "supportive, warm tone", verb: "convey", examples: ["using a helpful vocal tone", "speaking with a warm pitch", "maintaining a supportive vocal sound"] },
+                    "Pitch": { suggestion: "moderately high pitch", verb: "use", examples: ["raising pitch for warmth", "using a light vocal range", "avoiding low-pitched tones"] },
+                    "Intonation": { suggestion: "rising slightly to invite intonation", verb: "use", examples: ["using a slight rise to invite", "maintaining a warm tone", "adding a supportive vocal shift"] },
+                    "Pace": { suggestion: "moderate pace", verb: "deliver", examples: ["speaking at a steady vocal speed", "pausing to show support", "maintaining a balanced rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "encouraging, smooth rhythm", verb: "adopt", examples: ["using a smooth vocal tempo", "keeping an encouraging vocal flow", "avoiding abrupt vocal changes"] },
+                    "Volume": { suggestion: "moderate volume", verb: "use", examples: ["speaking at a clear vocal level", "maintaining a balanced loudness", "ensuring audibility"] },
+                    "Pauses": { suggestion: "pauses for soft encouragement", verb: "incorporate", examples: ["pausing to encourage acceptance", "using silences for warmth", "adding breaks for effect"] },
+                    "Emphasis": { suggestion: "emphasis on supportive terms", verb: "apply", examples: ["stressing offers with a warm tone", "using a gentle vocal weight", "highlighting help with pitch"] },
+                    "Timbre": { suggestion: "kind, generous timbre", verb: "use", examples: ["using a kind vocal tone", "maintaining a generous texture", "ensuring a warm vocal sound"] },
+                    "Natural Delivery": { suggestion: "supportive delivery", verb: "adopt", examples: ["using a helpful vocal style", "maintaining an offering flow", "avoiding harsh vocal patterns"] }
+                },
+                "Debate / Constructive Disagreement": {
+                    "Tone": { suggestion: "firm, respectful tone", verb: "present", examples: ["using a steady vocal tone", "speaking with a respectful pitch", "maintaining a firm vocal sound"] },
+                    "Pitch": { suggestion: "lowered for control pitch", verb: "use", examples: ["lowering pitch for authority", "keeping a steady vocal range", "avoiding high-pitched tones"] },
+                    "Intonation": { suggestion: "falling on counterpoints intonation", verb: "use", examples: ["using a falling pitch for counterpoints", "maintaining a firm tone", "adding a respectful vocal shift"] },
+                    "Pace": { suggestion: "moderate to fast pace", verb: "deliver", examples: ["speaking at a brisk vocal speed", "adjusting pace for impact", "maintaining a steady rhythm"] },
+                    "Cadence/Rhythm": { suggestion: "rhythmic, persuasive rhythm", verb: "adopt", examples: ["using a rhythmic vocal tempo", "keeping a persuasive vocal flow", "adding a debating beat"] },
+                    "Volume": { suggestion: "louder on key rebuttals volume", verb: "use", examples: ["raising volume for emphasis", "maintaining a bold vocal level", "using louder tones on key points"] },
+                    "Pauses": { suggestion: "pauses to pace arguments", verb: "incorporate", examples: ["pausing to separate arguments", "using silences for emphasis", "adding breaks for clarity"] },
+                    "Emphasis": { suggestion: "emphasis on logic and evidence", verb: "apply", examples: ["stressing key points with a firm tone", "using a bold vocal weight", "highlighting evidence with pitch"] },
+                    "Timbre": { suggestion: "strong, composed timbre", verb: "use", examples: ["using a strong vocal tone", "maintaining a composed texture", "ensuring a confident vocal sound"] },
+                    "Natural Delivery": { suggestion: "persuasive delivery", verb: "adopt", examples: ["using a debating vocal style", "maintaining a persuasive flow", "avoiding casual vocal patterns"] }
+                }
+            }
+        };
+
+        // Decision tree (Conversation Type → Subtype)
+        let decisionTree = {
+            "q1": {
+                question: "What is the conversation type?",
+                answers: {
+                    "Casual & Social": "q2_casual_social",
+                    "Instructional & Informational": "q2_instructional_informational",
+                    "Professional & Strategic": "q2_professional_strategic",
+                    "Emotional & Relational": "q2_emotional_relational",
+                    "Decision-Making & Coordination": "q2_decision_making_coordination"
+                }
+            },
+            "q2_casual_social": {
+                question: "What is the conversation subtype?",
+                answers: {
+                    "Chit Chat / Small Talk": "exclusion",
+                    "Storytelling / Recounting Experiences": "exclusion",
+                    "Joking / Playful Banter": "exclusion",
+                    "Emotional Support / Empathy Sharing": "exclusion",
+                    "Greeting / Parting Exchanges": "exclusion"
+                }
+            },
+            "q2_instructional_informational": {
+                question: "What is the conversation subtype?",
+                answers: {
+                    "Giving Instructions / Directions": "exclusion",
+                    "Explaining a Concept / Teaching": "exclusion",
+                    "Troubleshooting / Helping Solve a Problem": "exclusion",
+                    "Answering Questions / Clarifying Info": "exclusion",
+                    "Formal Inquiry / Request for Information": "exclusion"
+                }
+            },
+            "q2_professional_strategic": {
+                question: "What is the conversation subtype?",
+                answers: {
+                    "Presentation / Speech Delivery": "exclusion",
+                    "Interview (Responding)": "exclusion",
+                    "Interview (Conducting)": "exclusion",
+                    "Persuasion / Pitching an Idea": "exclusion",
+                    "Negotiation / Compromise Building": "exclusion"
+                }
+            },
+            "q2_emotional_relational": {
+                question: "What is the conversation subtype?",
+                answers: {
+                    "Conflict Resolution / De-escalation": "exclusion",
+                    "Apology / Owning a Mistake": "exclusion",
+                    "Giving Feedback / Evaluation": "exclusion",
+                    "Asking for Help / Expressing Need": "exclusion",
+                    "Expressing Gratitude / Appreciation": "exclusion"
+                }
+            },
+            "q2_decision_making_coordination": {
+                question: "What is the conversation subtype?",
+                answers: {
+                    "Planning / Coordinating Tasks": "exclusion",
+                    "Making a Request / Asking Permission": "exclusion",
+                    "Making an Offer / Extending Help": "exclusion",
+                    "Debate / Constructive Disagreement": "exclusion"
+                }
+            }
+        };
+
+        // State
+        let excludedAspects = [];
+        let currentNode = "q1";
+        let history = ["q1"];
+        let selections = [];
+        let conversationType = "";
+        let conversationSubtype = "";
+
+        // DOM elements
+        const aspectsList = document.getElementById("aspects-list");
+        const finalizeBtn = document.getElementById("finalize");
+        const step1 = document.getElementById("step1");
+        const decisionTreeDiv = document.getElementById("decision-tree");
+        const questionEl = document.getElementById("question");
+        const answersEl = document.getElementById("answers");
+        const resultEl = document.getElementById("result");
+        const reminderEl = document.getElementById("reminder");
+        const pathEl = document.getElementById("path");
+        const backBtn = document.getElementById("back");
+        const restartBtn = document.getElementById("restart");
+
+        // List of all vocal aspects
+        const allAspects = ["Tone", "Pitch", "Intonation", "Pace", "Cadence/Rhythm", "Volume", "Pauses", "Emphasis", "Timbre", "Natural Delivery"];
+
+        // Collect all possible criteria for aspect exclusion step (used previously for drop-downs, now just for reference)
+        const criteriaByAspect = {};
+        allAspects.forEach(aspect => {
+            criteriaByAspect[aspect] = new Set();
+            Object.keys(suggestionData).forEach(type => {
+                Object.keys(suggestionData[type]).forEach(subtype => {
+                    criteriaByAspect[aspect].add(suggestionData[type][subtype][aspect].suggestion);
+                });
+            });
+            criteriaByAspect[aspect] = Array.from(criteriaByAspect[aspect]);
+        });
+
+        // Render aspects for exclusion (without drop-down examples)
+        function renderAspects() {
+            aspectsList.innerHTML = "";
+            Object.keys(criteriaByAspect).forEach((aspect, index) => {
+                const div = document.createElement("div");
+                div.className = "aspect-card mb-2 p-3 rounded-lg bg-white border border-gray-200";
+                div.innerHTML = `
+                    <div class="flex items-center">
+                        <input type="checkbox" id="aspect-${index}" value="${aspect}" class="mr-2">
+                        <label for="aspect-${index}" class="font-semibold text-gray-800">${aspect}</label>
+                    </div>
+                `;
+                aspectsList.appendChild(div);
+            });
+        }
+
+        // Render current node in decision tree
+        function renderNode() {
+            if (!decisionTree || !decisionTree[currentNode]) {
+                questionEl.textContent = "Error: Decision tree not loaded. Please restart.";
+                answersEl.innerHTML = "";
+                return;
+            }
+            const node = decisionTree[currentNode];
+            questionEl.textContent = node.question;
+            answersEl.innerHTML = "";
+            resultEl.classList.add("hidden");
+            reminderEl.classList.add("hidden");
+            pathEl.classList.add("hidden");
+            backBtn.classList.toggle("hidden", history.length <= 1);
+
+            for (const [answer, next] of Object.entries(node.answers)) {
+                const btn = document.createElement("button");
+                btn.className = "gradient-btn text-white px-6 py-3 rounded-lg w-full text-base font-semibold";
+                btn.textContent = answer;
+                btn.onclick = () => selectAnswer(answer, next);
+                answersEl.appendChild(btn);
+            }
+        }
+
+        // Handle answer selection in decision tree
+        function selectAnswer(answer, next) {
+            selections.push(answer);
+            history.push(next);
+
+            if (currentNode === "q1") {
+                conversationType = answer;
+            }
+
+            if (next === "exclusion") {
+                conversationSubtype = answer;
+                decisionTreeDiv.classList.add("hidden");
+                step1.classList.remove("hidden");
+                step1.classList.add("fade-in");
+                renderAspects();
+            } else {
+                currentNode = next;
+                renderNode();
+            }
+        }
+
+        // Handle finalization after aspect exclusion
+        finalizeBtn.onclick = () => {
+            excludedAspects = [];
+            document.querySelectorAll("#aspects-list input:checked").forEach(input => {
+                excludedAspects.push(input.value);
+            });
+
+            if (excludedAspects.length === allAspects.length) {
+                resultEl.innerHTML = `<strong>Error:</strong> Please leave at least one aspect unselected.`;
+                resultEl.classList.remove("hidden");
+                return;
+            }
+
+            step1.classList.add("hidden");
+            backBtn.classList.add("hidden");
+            restartBtn.classList.remove("hidden");
+            resultEl.classList.remove("hidden");
+            reminderEl.classList.remove("hidden");
+            pathEl.classList.remove("hidden");
+            resultEl.classList.add("fade-in");
+            reminderEl.classList.add("fade-in");
+            pathEl.classList.add("fade-in");
+
+            // Generate final criterion with improved visualization
+            const remainingAspects = allAspects.filter(aspect => !excludedAspects.includes(aspect));
+            let criteriaHtml = `<strong>Recommended Criteria:</strong><ul class="space-y-3 mt-2">`;
+            remainingAspects.forEach(aspect => {
+                const { suggestion, verb, examples } = suggestionData[conversationType][conversationSubtype][aspect];
+                criteriaHtml += `
+                    <li>
+                        <strong>${aspect}:</strong> ${verb.charAt(0).toUpperCase() + verb.slice(1)} ${suggestion}
+                        <ul class="space-y-1 ml-2 text-sm text-gray-500">
+                            <li><em>Examples:</em> ${examples.join(", ")}</li>
+                        </ul>
+                    </li>
+                `;
+            });
+            criteriaHtml += `</ul>`;
+
+            resultEl.innerHTML = criteriaHtml;
+            pathEl.innerHTML = `<strong>Your Path:</strong> ${conversationType} → ${conversationSubtype}`;
+        };
+
+        // Go back to previous node
+        backBtn.onclick = () => {
+            if (history.length > 1) {
+                history.pop();
+                selections.pop();
+                currentNode = history[history.length - 1];
+                renderNode();
+                step1.classList.add("hidden");
+                decisionTreeDiv.classList.remove("hidden");
+                decisionTreeDiv.classList.add("fade-in");
+                restartBtn.classList.add("hidden");
+            }
+        };
+
+        // Restart the app
+        restartBtn.onclick = () => {
+            excludedAspects = [];
+            currentNode = "q1";
+            history = ["q1"];
+            selections = [];
+            conversationType = "";
+            conversationSubtype = "";
+            decisionTreeDiv.classList.remove("hidden");
+            decisionTreeDiv.classList.add("fade-in");
+            step1.classList.add("hidden");
+            resultEl.classList.add("hidden");
+            reminderEl.classList.add("hidden");
+            pathEl.classList.add("hidden");
+            restartBtn.classList.add("hidden");
+            renderNode();
+        };
+
+        // Initial render
+        renderNode();
+    </script>
+</body>
+</html>
